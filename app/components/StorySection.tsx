@@ -81,7 +81,7 @@ export default function StorySection() {
         <div className="grid md:grid-cols-2 gap-12 items-center mb-24">
           <motion.div variants={fadeIn}>
             <Image
-              src="/our story.jpg"
+              src="/our story.webp"
               alt="Our Story"
               width={700}
               height={700}
@@ -131,7 +131,7 @@ export default function StorySection() {
           </motion.div>
           <motion.div variants={fadeIn} className="md:order-2">
             <Image
-              src="/our mission.jpg"
+              src="/our mission.webp"
               alt="Our Mission"
               width={700}
               height={700}
@@ -142,7 +142,7 @@ export default function StorySection() {
         <div className="grid md:grid-cols-2 gap-12 items-center mt-24">
           <motion.div variants={fadeIn}>
             <Image
-              src="/our vision.jpg"
+              src="/our vision.webp"
               alt="Our Vision"
               width={700}
               height={700}

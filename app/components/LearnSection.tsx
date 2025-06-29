@@ -65,7 +65,7 @@ export default function LearnSection() {
         <div className="grid md:grid-cols-2 gap-8 mb-12">
           <motion.div variants={fadeIn} className="text-center">
             <Image
-              src="/BUSINESS  COMMERCIAL INSURANCE.jpg"
+              src="/BUSINESS  COMMERCIAL INSURANCE.webp"
               alt="Business Insurance"
               width={700}
               height={600}
@@ -77,7 +77,7 @@ export default function LearnSection() {
           </motion.div>
           <motion.div variants={fadeIn} className="text-center">
             <Image
-              src="/PERSONAL INSURANCE.jpg"
+              src="/PERSONAL INSURANCE.webp"
               alt="Personal Insurance"
               width={700}
               height={600}

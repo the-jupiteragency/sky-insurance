@@ -38,7 +38,7 @@ export default function HeroSection() {
       variants={fadeIn}
     >
       <Image
-        src="/hero section.png"
+        src="/hero section.webp"
         alt="Hero Background"
         fill
         className="object-cover"

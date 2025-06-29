@@ -61,7 +61,7 @@ export default function WhyInsuranceSection() {
 
   return (
     <motion.section
-      className="relative py-24 bg-[url('/bg.jpg')] bg-cover bg-center"
+      className="relative py-24 bg-[url('/bg.webp')] bg-cover bg-center"
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true }}

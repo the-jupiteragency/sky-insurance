@@ -145,7 +145,7 @@ export default function Services() {
           <div className="grid gap-8 md:grid-cols-2 md:gap-12">
             <div className="relative h-[300px] md:h-[700px] w-full md:w-[650px] overflow-hidden rounded-lg">
               <Image
-                src="/services.jpg"
+                src="/services.webp"
                 alt="Professional reviewing documents"
                 fill
                 className="object-cover"
@@ -189,7 +189,7 @@ export default function Services() {
             >
               <div className="relative h-[300px] md:h-[400px] overflow-hidden rounded-lg">
                 <Image
-                  src="/Business Insurance.jpg"
+                  src="/Business Insurance.webp"
                   alt="Business insurance consultation"
                   fill
                   className="object-cover"
@@ -223,7 +223,7 @@ export default function Services() {
             >
               <div className="relative h-[300px] md:h-[400px] overflow-hidden rounded-lg">
                 <Image
-                  src="/BUSINESS  COMMERCIAL INSURANCE.jpg"
+                  src="/BUSINESS  COMMERCIAL INSURANCE.webp"
                   alt="Personal insurance planning"
                   fill
                   className="object-cover"

@@ -60,7 +60,7 @@ export default function BusinessInsuranceSection() {
             className="flex-1 md:h-[800px] h-auto" // Flex allows responsive sizing
           >
             <Image
-              src="/Business Insurance.jpg"
+              src="/Business Insurance.webp"
               alt="Business Insurance Handshake"
               width={500}
               height={900}
