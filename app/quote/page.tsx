@@ -1477,12 +1477,6 @@ export default function QuotePage() {
         icon: Car,
       },
       {
-        key: "offers",
-        title: isRTL ? "عروض التأمين" : "Insurance Offers",
-        description: isRTL ? "اختر خطتك" : "Choose your plan",
-        icon: Gift,
-      },
-      {
         key: "user-info",
         title: isRTL ? "المعلومات الشخصية" : "Personal Info",
         description: isRTL ? "بياناتك الشخصية" : "Your contact details",
@@ -1493,6 +1487,12 @@ export default function QuotePage() {
         title: isRTL ? "المستندات" : "Documents",
         description: isRTL ? "رفع الملفات المطلوبة" : "Upload required files",
         icon: FileText,
+      },
+      {
+        key: "offers",
+        title: isRTL ? "عروض التأمين" : "Insurance Offers",
+        description: isRTL ? "اختر خطتك" : "Choose your plan",
+        icon: Gift,
       },
       {
         key: "thank-you",
@@ -1607,30 +1607,17 @@ export default function QuotePage() {
             canProceed = validateCarInfo();
           }
           break;
-        case "offers":
-          if (targetStep !== "car-info" && targetStep !== "offers") {
-            if (!state.selectedOffer) {
-              toast({
-                title: isRTL ? "يرجى اختيار عرض" : "Please select an offer",
-                description: isRTL
-                  ? "يجب اختيار عرض تأمين للمتابعة."
-                  : "You must choose an insurance offer to continue.",
-                variant: "destructive",
-              });
-              return;
-            }
-          }
-          break;
         case "user-info":
-          if (
-            targetStep !== "car-info" &&
-            targetStep !== "offers" &&
-            targetStep !== "user-info"
-          ) {
+          if (targetStep !== "car-info" && targetStep !== "user-info") {
             canProceed = validateUserInfo();
           }
           break;
         case "documents":
+          if (targetStep === "offers") {
+            canProceed = validateDocuments();
+          }
+          break;
+        case "offers":
           if (targetStep === "thank-you") {
             toast({
               title: isRTL ? "يجب إرسال الطلب" : "Must submit quote",
@@ -1662,6 +1649,14 @@ export default function QuotePage() {
   const handleNext = () => {
     if (state.currentStep === "car-info") {
       if (validateCarInfo()) {
+        setCurrentStep("user-info");
+      }
+    } else if (state.currentStep === "user-info") {
+      if (validateUserInfo()) {
+        setCurrentStep("documents");
+      }
+    } else if (state.currentStep === "documents") {
+      if (validateDocuments()) {
         const calculatedOffers = calculateInsuranceOffers(
           state.carInfo as CarInfo
         );
@@ -1670,7 +1665,8 @@ export default function QuotePage() {
       }
     } else if (state.currentStep === "offers") {
       if (state.selectedOffer) {
-        setCurrentStep("user-info");
+        // This is now the final step before submission
+        return;
       } else {
         toast({
           title: isRTL ? "يرجى اختيار عرض" : "Please select an offer",
@@ -1680,20 +1676,11 @@ export default function QuotePage() {
           variant: "destructive",
         });
       }
-    } else if (state.currentStep === "user-info") {
-      if (validateUserInfo()) {
-        setCurrentStep("documents");
-      }
-    } else if (state.currentStep === "documents") {
-      if (validateDocuments()) {
-        // This is now the final step before submission
-        return;
-      }
     }
   };
 
   const handleBack = () => {
-    const stepOrder: Step[] = ["car-info", "offers", "user-info", "documents"];
+    const stepOrder: Step[] = ["car-info", "user-info", "documents", "offers"];
     const currentIndex = stepOrder.indexOf(state.currentStep);
     if (currentIndex > 0) {
       setCurrentStep(stepOrder[currentIndex - 1]);
@@ -2676,7 +2663,7 @@ export default function QuotePage() {
               {isRTL ? "السابق" : "Back"}
             </Button>
 
-            {state.currentStep === "documents" ? (
+            {state.currentStep === "offers" ? (
               <Button
                 onClick={handleSubmit}
                 disabled={!state.selectedOffer || isSubmitting}

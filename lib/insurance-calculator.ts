@@ -771,7 +771,7 @@ function calculateAllGIGOffers(carInfo: CarInfo): InsuranceOffer[] {
   );
 
   // GIG Gold Policy (for eligible vehicles and price ranges)
-  if (market_price >= 500000) {
+  if (market_price >= 501000) {
     const goldEligibleBrands = !["Opel", "Chevrolet", "MG"].includes(make);
 
     if (goldEligibleBrands) {
