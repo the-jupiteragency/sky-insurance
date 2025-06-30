@@ -45,7 +45,7 @@ export default function HeroSection() {
         priority
       />
       <div className="absolute inset-0 bg-black/30" />
-      <div className="container mx-auto px-4 text-center text-white">
+      <div className="relative z-10 container mx-auto px-4 text-center text-white">
         <Image
           src="/dark star.png"
           alt="star"

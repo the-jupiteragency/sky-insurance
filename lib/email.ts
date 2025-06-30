@@ -31,7 +31,7 @@ export interface EmailData {
   userInfo: {
     full_name: string
     mobile_number: string
-    email: string
+    email?: string
   }
   carInfo: {
     make: string
@@ -48,10 +48,10 @@ export interface EmailData {
     premiumRate: number
   }
   documents: {
-    personal_id_front: string
-    personal_id_back: string
-    license_front: string
-    license_back: string
+    personal_id_front?: string
+    personal_id_back?: string
+    license_front?: string
+    license_back?: string
   }
 }
 
@@ -60,12 +60,12 @@ export async function sendInsuranceQuoteEmail(data: EmailData) {
     console.log("Starting email send process...")
     const emailConfig = getEmailConfig()
 
-    // Fetch documents as attachments
+    // Fetch documents as attachments (only if they exist)
     const attachments = await Promise.all([
-      fetchFileAsAttachment(data.documents.personal_id_front, "personal_id_front.jpg"),
-      fetchFileAsAttachment(data.documents.personal_id_back, "personal_id_back.jpg"),
-      fetchFileAsAttachment(data.documents.license_front, "license_front.jpg"),
-      fetchFileAsAttachment(data.documents.license_back, "license_back.jpg"),
+      data.documents.personal_id_front ? fetchFileAsAttachment(data.documents.personal_id_front, "personal_id_front.jpg") : null,
+      data.documents.personal_id_back ? fetchFileAsAttachment(data.documents.personal_id_back, "personal_id_back.jpg") : null,
+      data.documents.license_front ? fetchFileAsAttachment(data.documents.license_front, "license_front.jpg") : null,
+      data.documents.license_back ? fetchFileAsAttachment(data.documents.license_back, "license_back.jpg") : null,
     ])
 
     console.log("Documents processed for attachments:", attachments.filter(Boolean).length)
@@ -140,14 +140,14 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
             <p style="margin: 0; color: #0369a1; font-size: 14px;">
               <strong>Mode:</strong> ${emailConfig.mode}<br>
               <strong>From:</strong> ${emailConfig.from}<br>
-              <strong>Customer Email:</strong> ${data.userInfo.email}
+              <strong>Customer Email:</strong> ${data.userInfo.email || 'Not provided'}
             </p>
           </div>
 
           <div class="customer-note">
             <h4 style="margin-top: 0; color: #0369a1;">📞 Customer Contact Method</h4>
             <p style="margin: 0; color: #0369a1; font-size: 14px;">
-              <strong>Note:</strong> Customer confirmation emails have been disabled. Please contact the customer directly at <strong>${data.userInfo.mobile_number}</strong> or <strong>${data.userInfo.email}</strong> to confirm their quote and proceed with the insurance process.
+              <strong>Note:</strong> Customer confirmation emails have been disabled. Please contact the customer directly at <strong>${data.userInfo.mobile_number}</strong>${data.userInfo.email ? ` or <strong>${data.userInfo.email}</strong>` : ''} to confirm their quote and proceed with the insurance process.
             </p>
           </div>
 
@@ -167,10 +167,10 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
                 <div class="info-label">Mobile Number</div>
                 <div class="info-value">${data.userInfo.mobile_number}</div>
               </div>
-              <div class="info-item" style="grid-column: 1 / -1;">
+              ${data.userInfo.email ? `<div class="info-item" style="grid-column: 1 / -1;">
                 <div class="info-label">Email Address</div>
                 <div class="info-value">${data.userInfo.email}</div>
-              </div>
+              </div>` : ''}
             </div>
           </div>
 
@@ -210,14 +210,23 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
             </div>
           </div>
 
+          ${attachments.filter(Boolean).length > 0 ? `
           <div class="highlight">
             <h4 style="margin-top: 0; color: #92400e;">📎 Documents Attached</h4>
             <p style="margin: 0; color: #92400e;">
               Customer documents are attached to this email for verification:
-              <br>• Personal ID (Front & Back)
-              <br>• Driver License (Front & Back)
+              ${data.documents.personal_id_front ? '<br>• Personal ID (Front)' : ''}
+              ${data.documents.personal_id_back ? '<br>• Personal ID (Back)' : ''}
+              ${data.documents.license_front ? '<br>• Driver License (Front)' : ''}
+              ${data.documents.license_back ? '<br>• Driver License (Back)' : ''}
             </p>
-          </div>
+          </div>` : `
+          <div class="highlight">
+            <h4 style="margin-top: 0; color: #92400e;">📋 Documents Status</h4>
+            <p style="margin: 0; color: #92400e;">
+              No documents were uploaded by the customer. Please request documents during phone contact.
+            </p>
+          </div>`}
 
           <div class="section">
             <h3>📋 Next Steps</h3>

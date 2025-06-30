@@ -132,7 +132,7 @@ export function useQuoteState() {
       case "user-info":
         return !!state.carInfo.make && !!state.carInfo.model && !!state.carInfo.year && !!state.carInfo.market_price
       case "documents":
-        return !!state.userInfo.full_name && !!state.userInfo.mobile_number && !!state.userInfo.email
+        return !!state.userInfo.full_name && !!state.userInfo.mobile_number
       case "offers":
         return (
           !!state.documents.personal_id_front &&

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     console.log("Validating input data...")
     const validatedCarInfo = carInfoSchema.parse(carInfo)
     const validatedUserInfo = userInfoSchema.parse(userInfo)
-    const validatedDocuments = documentsSchema.parse(documents)
+    const validatedDocuments = documentsSchema.parse(documents || {})
 
     console.log("Validation successful")
 
@@ -46,14 +46,17 @@ export async function POST(request: NextRequest) {
     const carId = carResult[0].id
     console.log("Car created with ID:", carId)
 
-    // Insert documents
+    // Insert documents (only if they exist)
     console.log("Inserting documents...")
     const documentTypes = ["personal_id_front", "personal_id_back", "license_front", "license_back"]
     for (const docType of documentTypes) {
-      await sql`
-        INSERT INTO documents (user_id, document_type, file_name, file_url)
-        VALUES (${userId}, ${docType}, ${docType}, ${validatedDocuments[docType as keyof typeof validatedDocuments]})
-      `
+      const docUrl = validatedDocuments[docType as keyof typeof validatedDocuments]
+      if (docUrl) {
+        await sql`
+          INSERT INTO documents (user_id, document_type, file_name, file_url)
+          VALUES (${userId}, ${docType}, ${docType}, ${docUrl})
+        `
+      }
     }
     console.log("Documents inserted successfully")
 
