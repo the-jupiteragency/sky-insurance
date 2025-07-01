@@ -1,98 +1,126 @@
-import { Resend } from "resend"
+import { Resend } from "resend";
 
 if (!process.env.RESEND_API_KEY) {
-  throw new Error("RESEND_API_KEY environment variable is required")
+  throw new Error("RESEND_API_KEY environment variable is required");
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Email configuration based on environment and domain verification status
 const getEmailConfig = () => {
-  const isDevelopment = process.env.NODE_ENV === "development"
-  const hasVerifiedDomain = process.env.RESEND_VERIFIED_DOMAIN === "true"
-  const customDomain = process.env.RESEND_CUSTOM_DOMAIN || "sky.eg"
+  const isDevelopment = process.env.NODE_ENV === "development";
+  const hasVerifiedDomain = process.env.RESEND_VERIFIED_DOMAIN === "true";
+  const customDomain = process.env.RESEND_CUSTOM_DOMAIN || "sky.eg";
 
   if (hasVerifiedDomain) {
     // Production configuration with verified domain
     return {
       from: `Sky Insurance <noreply@${customDomain}>`,
       mode: "production",
-    }
+    };
   } else {
     // Development or production without verified domain
     return {
       from: "Sky Insurance <onboarding@resend.dev>",
       mode: isDevelopment ? "development" : "production-fallback",
-    }
+    };
   }
-}
+};
 
 export interface EmailData {
   userInfo: {
-    full_name: string
-    mobile_number: string
-    email?: string
-  }
+    full_name: string;
+    mobile_number: string;
+    email?: string;
+  };
   carInfo: {
-    make: string
-    model: string
-    year: number
-    market_price: number
-    condition: string
-    fuel_type: string
-  }
+    make: string;
+    model: string;
+    year: number;
+    market_price: number;
+    condition: string;
+    fuel_type: string;
+  };
   selectedOffer: {
-    company: string
-    policyType: string
-    annualPremium: number
-    premiumRate: number
-  }
+    company: string;
+    policyType: string;
+    annualPremium: number;
+    premiumRate: number;
+  };
   documents: {
-    personal_id_front?: string
-    personal_id_back?: string
-    license_front?: string
-    license_back?: string
-  }
+    personal_id_front?: string;
+    personal_id_back?: string;
+    license_front?: string;
+    license_back?: string;
+  };
 }
 
 export async function sendInsuranceQuoteEmail(data: EmailData) {
   try {
-    console.log("Starting email send process...")
-    const emailConfig = getEmailConfig()
+    console.log("Starting email send process...");
+    const emailConfig = getEmailConfig();
 
     // Fetch documents as attachments (only if they exist)
     const attachments = await Promise.all([
-      data.documents.personal_id_front ? fetchFileAsAttachment(data.documents.personal_id_front, "personal_id_front.jpg") : null,
-      data.documents.personal_id_back ? fetchFileAsAttachment(data.documents.personal_id_back, "personal_id_back.jpg") : null,
-      data.documents.license_front ? fetchFileAsAttachment(data.documents.license_front, "license_front.jpg") : null,
-      data.documents.license_back ? fetchFileAsAttachment(data.documents.license_back, "license_back.jpg") : null,
-    ])
+      data.documents.personal_id_front
+        ? fetchFileAsAttachment(
+            data.documents.personal_id_front,
+            "personal_id_front.jpg"
+          )
+        : null,
+      data.documents.personal_id_back
+        ? fetchFileAsAttachment(
+            data.documents.personal_id_back,
+            "personal_id_back.jpg"
+          )
+        : null,
+      data.documents.license_front
+        ? fetchFileAsAttachment(
+            data.documents.license_front,
+            "license_front.jpg"
+          )
+        : null,
+      data.documents.license_back
+        ? fetchFileAsAttachment(data.documents.license_back, "license_back.jpg")
+        : null,
+    ]);
 
-    console.log("Documents processed for attachments:", attachments.filter(Boolean).length)
-    console.log("Email configuration:", emailConfig.mode)
+    console.log(
+      "Documents processed for attachments:",
+      attachments.filter(Boolean).length
+    );
+    console.log("Email configuration:", emailConfig.mode);
 
     // Send email to sales team only (omar.khaled@sky.eg)
-    const salesEmailResult = await sendSalesNotification(data, attachments.filter(Boolean), emailConfig)
+    const salesEmailResult = await sendSalesNotification(
+      data,
+      attachments.filter(Boolean),
+      emailConfig
+    );
 
-    console.log("Sales email result:", salesEmailResult.success)
+    console.log("Sales email result:", salesEmailResult.success);
 
     return {
       success: salesEmailResult.success,
       salesEmail: salesEmailResult,
       emailConfig: emailConfig,
       note: "Sales team notification sent successfully. Customer will be contacted directly by phone.",
-    }
+    };
   } catch (error) {
-    console.error("Email sending failed:", error)
+    console.error("Email sending failed:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error",
       details: error,
-    }
+    };
   }
 }
 
-async function sendSalesNotification(data: EmailData, attachments: any[], emailConfig: any) {
+async function sendSalesNotification(
+  data: EmailData,
+  attachments: any[],
+  emailConfig: any
+) {
   const emailHtml = `
     <!DOCTYPE html>
     <html>
@@ -130,7 +158,7 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
     <body>
       <div class="container">
         <div class="header">
-          <h1 style="margin: 0; font-size: 28px;">🚗 New Insurance Quote Request</h1>
+          <h1 style="margin: 0; font-size: 28px;">New Insurance Quote Request</h1>
           <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Priority: High - Customer Waiting</p>
         </div>
         
@@ -140,14 +168,14 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
             <p style="margin: 0; color: #0369a1; font-size: 14px;">
               <strong>Mode:</strong> ${emailConfig.mode}<br>
               <strong>From:</strong> ${emailConfig.from}<br>
-              <strong>Customer Email:</strong> ${data.userInfo.email || 'Not provided'}
+              <strong>Customer Email:</strong> ${data.userInfo.email || "Not provided"}
             </p>
           </div>
 
           <div class="customer-note">
             <h4 style="margin-top: 0; color: #0369a1;">📞 Customer Contact Method</h4>
             <p style="margin: 0; color: #0369a1; font-size: 14px;">
-              <strong>Note:</strong> Customer confirmation emails have been disabled. Please contact the customer directly at <strong>${data.userInfo.mobile_number}</strong>${data.userInfo.email ? ` or <strong>${data.userInfo.email}</strong>` : ''} to confirm their quote and proceed with the insurance process.
+              <strong>Note:</strong> Customer confirmation emails have been disabled. Please contact the customer directly at <strong>${data.userInfo.mobile_number}</strong>${data.userInfo.email ? ` or <strong>${data.userInfo.email}</strong>` : ""} to confirm their quote and proceed with the insurance process.
             </p>
           </div>
 
@@ -167,10 +195,14 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
                 <div class="info-label">Mobile Number</div>
                 <div class="info-value">${data.userInfo.mobile_number}</div>
               </div>
-              ${data.userInfo.email ? `<div class="info-item" style="grid-column: 1 / -1;">
+              ${
+                data.userInfo.email
+                  ? `<div class="info-item" style="grid-column: 1 / -1;">
                 <div class="info-label">Email Address</div>
                 <div class="info-value">${data.userInfo.email}</div>
-              </div>` : ''}
+              </div>`
+                  : ""
+              }
             </div>
           </div>
 
@@ -210,23 +242,27 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
             </div>
           </div>
 
-          ${attachments.filter(Boolean).length > 0 ? `
+          ${
+            attachments.filter(Boolean).length > 0
+              ? `
           <div class="highlight">
             <h4 style="margin-top: 0; color: #92400e;">📎 Documents Attached</h4>
             <p style="margin: 0; color: #92400e;">
               Customer documents are attached to this email for verification:
-              ${data.documents.personal_id_front ? '<br>• Personal ID (Front)' : ''}
-              ${data.documents.personal_id_back ? '<br>• Personal ID (Back)' : ''}
-              ${data.documents.license_front ? '<br>• Driver License (Front)' : ''}
-              ${data.documents.license_back ? '<br>• Driver License (Back)' : ''}
+              ${data.documents.personal_id_front ? "<br>• Personal ID (Front)" : ""}
+              ${data.documents.personal_id_back ? "<br>• Personal ID (Back)" : ""}
+              ${data.documents.license_front ? "<br>• Driver License (Front)" : ""}
+              ${data.documents.license_back ? "<br>• Driver License (Back)" : ""}
             </p>
-          </div>` : `
+          </div>`
+              : `
           <div class="highlight">
             <h4 style="margin-top: 0; color: #92400e;">📋 Documents Status</h4>
             <p style="margin: 0; color: #92400e;">
               No documents were uploaded by the customer. Please request documents during phone contact.
             </p>
-          </div>`}
+          </div>`
+          }
 
           <div class="section">
             <h3>📋 Next Steps</h3>
@@ -250,20 +286,23 @@ async function sendSalesNotification(data: EmailData, attachments: any[], emailC
       </div>
     </body>
     </html>
-  `
+  `;
 
   try {
     const result = await resend.emails.send({
       from: emailConfig.from,
-      to: ["omar.khaled@sky.eg"],
-      subject: `🚗 URGENT: New Quote Request - ${data.userInfo.full_name} (${data.selectedOffer.company} - ${data.selectedOffer.annualPremium.toLocaleString()} EGP)`,
+      to: ["website@Sky.eg"],
+      subject: `URGENT: New Quote Request - ${data.userInfo.full_name} (${data.selectedOffer.company} - ${data.selectedOffer.annualPremium.toLocaleString()} EGP)`,
       html: emailHtml,
       attachments: attachments,
-    })
+    });
 
-    return { success: true, data: result }
+    return { success: true, data: result };
   } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Unknown error" }
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
   }
 }
 
@@ -271,28 +310,30 @@ async function fetchFileAsAttachment(url: string, filename: string) {
   try {
     // Handle base64 data URLs
     if (url.startsWith("data:")) {
-      const [header, base64Data] = url.split(",")
-      const mimeType = header.match(/data:([^;]+)/)?.[1] || "application/octet-stream"
+      const [header, base64Data] = url.split(",");
+      const mimeType =
+        header.match(/data:([^;]+)/)?.[1] || "application/octet-stream";
 
       return {
         filename,
         content: Buffer.from(base64Data, "base64"),
         type: mimeType,
-      }
+      };
     }
 
     // Handle regular URLs
-    const response = await fetch(url)
-    if (!response.ok) throw new Error(`Failed to fetch ${filename}: ${response.statusText}`)
+    const response = await fetch(url);
+    if (!response.ok)
+      throw new Error(`Failed to fetch ${filename}: ${response.statusText}`);
 
-    const buffer = await response.arrayBuffer()
+    const buffer = await response.arrayBuffer();
     return {
       filename,
       content: Buffer.from(buffer),
       type: response.headers.get("content-type") || "application/octet-stream",
-    }
+    };
   } catch (error) {
-    console.error(`Failed to fetch attachment ${filename}:`, error)
-    return null
+    console.error(`Failed to fetch attachment ${filename}:`, error);
+    return null;
   }
 }

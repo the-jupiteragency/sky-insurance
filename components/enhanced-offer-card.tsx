@@ -430,7 +430,7 @@ export function EnhancedOfferCard({
                 {language === "en" ? "Annual:" : "سنوياً:"}
               </span>
               <span className="font-semibold">
-                {offer.annualPremium.toLocaleString()} EGP
+                {Math.round(offer.annualPremium).toLocaleString()} EGP
               </span>
             </div>
             <div
@@ -744,7 +744,7 @@ export function EnhancedOfferCard({
                             {language === "en" ? "Annual:" : "سنوياً:"}
                           </span>
                           <span className="font-semibold">
-                            {offer.annualPremium.toLocaleString()} EGP
+                            {Math.round(offer.annualPremium).toLocaleString()} EGP
                           </span>
                         </div>
                         <div
@@ -829,7 +829,7 @@ export function EnhancedOfferCard({
           {/* Price Section */}
           <div className="text-center bg-white rounded-lg p-4 border">
             <div className="text-3xl font-bold text-blue-600 mb-1 flex items-center justify-center gap-1">
-              <span>{offer.annualPremium.toLocaleString()}</span>
+              <span>{Math.round(offer.annualPremium).toLocaleString()}</span>
               <span className="text-lg font-normal text-muted-foreground">
                 {language === "en" ? "EGP" : "جنيه"}
               </span>

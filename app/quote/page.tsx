@@ -2117,9 +2117,9 @@ export default function QuotePage() {
         <CardTitle
           className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}
         >
-          <div className="p-2 bg-green-500 rounded-lg">
+          {/* <div className="p-2 bg-green-500 rounded-lg">
             <User className="h-6 w-6 text-white" />
-          </div>
+          </div> */}
           {isRTL ? "المعلومات الشخصية" : "Personal Information"}
         </CardTitle>
         <CardDescription className={isRTL ? "text-right" : ""}>
@@ -2215,9 +2215,9 @@ export default function QuotePage() {
         <CardTitle
           className={cn("flex items-center gap-3", isRTL && "flex-row-reverse")}
         >
-          <div className="p-2 bg-purple-500 rounded-lg">
+          {/* <div className="p-2 bg-purple-500 rounded-lg">
             <FileText className="h-6 w-6 text-white" />
-          </div>
+          </div> */}
           {isRTL ? "المستندات المطلوبة" : "Required Documents"}
         </CardTitle>
         <CardDescription className={isRTL ? "text-right" : ""}>
