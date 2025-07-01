@@ -291,7 +291,7 @@ async function sendSalesNotification(
   try {
     const result = await resend.emails.send({
       from: emailConfig.from,
-      to: ["website@Sky.eg"],
+      to: ["website@sky.eg"],
       subject: `URGENT: New Quote Request - ${data.userInfo.full_name} (${data.selectedOffer.company} - ${data.selectedOffer.annualPremium.toLocaleString()} EGP)`,
       html: emailHtml,
       attachments: attachments,
