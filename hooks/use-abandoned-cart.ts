@@ -18,17 +18,29 @@ interface AbandonedCartData {
   };
   timestamp: number;
   emailSent: boolean;
+  sessionId: string;
 }
 
 const STORAGE_KEY = "sky_insurance_abandoned_cart";
-const ABANDON_TIMEOUT = 10 * 1000; // 30 seconds
+const SESSION_KEY = "sky_insurance_session_id";
+// const ABANDON_TIMEOUT = 30 * 60 * 1000; // 30 minutes
+const ABANDON_TIMEOUT = 10 * 1000; // 30 minutes
+
+const getSessionId = () => {
+  let sessionId = sessionStorage.getItem(SESSION_KEY);
+  if (!sessionId) {
+    sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+    sessionStorage.setItem(SESSION_KEY, sessionId);
+  }
+  return sessionId;
+};
 
 export function useAbandonedCart() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
   const clearAbandonedCart = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    sessionStorage.removeItem(STORAGE_KEY);
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -42,7 +54,7 @@ export function useAbandonedCart() {
     }
 
     timeoutRef.current = setTimeout(async () => {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
         const data: AbandonedCartData = JSON.parse(stored);
         if (!data.emailSent) {
@@ -53,9 +65,8 @@ export function useAbandonedCart() {
               body: JSON.stringify(data),
             });
 
-            // Mark as sent
             data.emailSent = true;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
           } catch (error) {
             console.error("Failed to send abandoned cart email:", error);
           }
@@ -69,25 +80,35 @@ export function useAbandonedCart() {
       userInfo: AbandonedCartData["userInfo"],
       carInfo: AbandonedCartData["carInfo"]
     ) => {
+      const sessionId = getSessionId();
+      const existing = sessionStorage.getItem(STORAGE_KEY);
+
+      if (existing) {
+        const existingData: AbandonedCartData = JSON.parse(existing);
+        if (existingData.emailSent && existingData.sessionId === sessionId) {
+          return;
+        }
+      }
+
       const data: AbandonedCartData = {
         userInfo,
         carInfo,
         timestamp: Date.now(),
         emailSent: false,
+        sessionId,
       };
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       resetTimer();
     },
     [resetTimer]
   );
 
   const getAbandonedCart = useCallback((): AbandonedCartData | null => {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const stored = sessionStorage.getItem(STORAGE_KEY);
     return stored ? JSON.parse(stored) : null;
   }, []);
 
-  // Track user activity
   useEffect(() => {
     const handleActivity = () => {
       lastActivityRef.current = Date.now();
@@ -95,15 +116,25 @@ export function useAbandonedCart() {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        // User left the page, start countdown
         resetTimer();
       } else {
-        // User returned, reset activity
         handleActivity();
       }
     };
 
-    // Activity events
+    const handleBeforeUnload = () => {
+      const stored = sessionStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const data: AbandonedCartData = JSON.parse(stored);
+        if (!data.emailSent) {
+          navigator.sendBeacon(
+            "/api/send-abandoned-cart-email",
+            JSON.stringify(data)
+          );
+        }
+      }
+    };
+
     const events = [
       "mousedown",
       "mousemove",
@@ -116,14 +147,15 @@ export function useAbandonedCart() {
       document.addEventListener(event, handleActivity, true);
     });
 
-    // Page visibility
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
       events.forEach((event) => {
         document.removeEventListener(event, handleActivity, true);
       });
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
 
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);

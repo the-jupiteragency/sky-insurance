@@ -100,7 +100,6 @@ export async function sendAbandonedCartEmail(data: AbandonedCartData) {
         <div class="container">
           <div class="header">
             <h1 style="margin: 0; font-size: 28px;">⚠️ Abandoned Insurance Quote</h1>
-            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Customer left ${timeAgo} minutes ago</p>
           </div>
           
           <div class="content">
@@ -165,7 +164,7 @@ export async function sendAbandonedCartEmail(data: AbandonedCartData) {
 
     const result = await resend.emails.send({
       from: emailConfig.from,
-      to: ["website@sky.eg"],
+      to: ["omar.khaled@sky.eg"],
       subject: `ABANDONED QUOTE: ${data.userInfo.full_name} - ${data.carInfo.make} ${data.carInfo.model}`,
       html: emailHtml,
     });
@@ -415,7 +414,7 @@ async function sendSalesNotification(
   try {
     const result = await resend.emails.send({
       from: emailConfig.from,
-      to: ["website@sky.eg"],
+      to: ["omar.khaled@sky.eg"],
       subject: `URGENT: New Quote Request - ${data.userInfo.full_name} (${data.selectedOffer.company} - ${data.selectedOffer.annualPremium.toLocaleString()} EGP)`,
       html: emailHtml,
       attachments: attachments,
