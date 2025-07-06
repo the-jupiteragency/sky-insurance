@@ -55,6 +55,130 @@ export interface EmailData {
   };
 }
 
+export interface AbandonedCartData {
+  userInfo: {
+    full_name: string;
+    mobile_number: string;
+    email?: string;
+  };
+  carInfo: {
+    make: string;
+    model: string;
+    year: number;
+    market_price: number;
+    condition: string;
+    fuel_type: string;
+  };
+  timestamp: number;
+}
+
+export async function sendAbandonedCartEmail(data: AbandonedCartData) {
+  try {
+    const emailConfig = getEmailConfig();
+    const timeAgo = Math.round((Date.now() - data.timestamp) / (1000 * 60));
+
+    const emailHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Abandoned Insurance Quote</title>
+        <style>
+          body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+          .container { max-width: 700px; margin: 0 auto; background: #ffffff; }
+          .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; text-align: center; }
+          .content { padding: 30px; }
+          .section { background: #fef3c7; margin: 25px 0; padding: 25px; border-radius: 12px; border-left: 5px solid #f59e0b; }
+          .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 15px 0; }
+          .info-item { background: white; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+          .info-label { font-weight: 600; color: #64748b; font-size: 14px; margin-bottom: 5px; }
+          .info-value { color: #1e293b; font-size: 16px; }
+          .footer { text-align: center; color: #64748b; font-size: 14px; margin-top: 40px; padding: 20px; background: #f1f5f9; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin: 0; font-size: 28px;">⚠️ Abandoned Insurance Quote</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">Customer left ${timeAgo} minutes ago</p>
+          </div>
+          
+          <div class="content">
+            <div class="section">
+              <h3>Follow-up Required</h3>
+              <p style="margin: 0; font-weight: 600;">Customer started but didn't complete quote process. Contact immediately at ${data.userInfo.mobile_number}.</p>
+            </div>
+
+            <div class="section">
+              <h3>👤 Customer Information</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Full Name</div>
+                  <div class="info-value">${data.userInfo.full_name}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Mobile Number</div>
+                  <div class="info-value">${data.userInfo.mobile_number}</div>
+                </div>
+                ${
+                  data.userInfo.email
+                    ? `<div class="info-item" style="grid-column: 1 / -1;">
+                  <div class="info-label">Email Address</div>
+                  <div class="info-value">${data.userInfo.email}</div>
+                </div>`
+                    : ""
+                }
+              </div>
+            </div>
+
+            <div class="section">
+              <h3>🚗 Vehicle Information</h3>
+              <div class="info-grid">
+                <div class="info-item">
+                  <div class="info-label">Make & Model</div>
+                  <div class="info-value">${data.carInfo.make} ${data.carInfo.model}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Year</div>
+                  <div class="info-value">${data.carInfo.year}</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Market Price</div>
+                  <div class="info-value">${Math.round(data.carInfo.market_price).toLocaleString()} EGP</div>
+                </div>
+                <div class="info-item">
+                  <div class="info-label">Condition & Fuel</div>
+                  <div class="info-value">${data.carInfo.condition} • ${data.carInfo.fuel_type}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <p><strong>Sky Insurance</strong> - Abandoned Cart Alert</p>
+            <p>Customer abandoned quote ${timeAgo} minutes ago</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const result = await resend.emails.send({
+      from: emailConfig.from,
+      to: ["website@sky.eg"],
+      subject: `ABANDONED QUOTE: ${data.userInfo.full_name} - ${data.carInfo.make} ${data.carInfo.model}`,
+      html: emailHtml,
+    });
+
+    return { success: true, data: result };
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error",
+    };
+  }
+}
+
 export async function sendInsuranceQuoteEmail(data: EmailData) {
   try {
     console.log("Starting email send process...");
