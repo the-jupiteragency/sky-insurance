@@ -63,6 +63,7 @@ export default function QuotePage() {
     canNavigateToStep,
     updateState,
     markAsSubmitted,
+    clearState,
   } = useQuoteState();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -1139,7 +1140,15 @@ export default function QuotePage() {
           </div>
 
           <div className="space-y-4">
-            <Button size="lg" onClick={() => (window.location.href = "/")}>
+            <Button size="lg" onClick={() => {
+              // Clear all stored data
+              clearAbandonedCart();
+              clearState();
+              localStorage.clear();
+              sessionStorage.clear();
+              // Navigate to home
+              window.location.href = "/";
+            }}>
               {isRTL ? "العودة للرئيسية" : "Return to Home"}
             </Button>
             <p

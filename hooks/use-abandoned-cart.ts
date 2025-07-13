@@ -23,21 +23,15 @@ interface AbandonedCartData {
 
 const STORAGE_KEY = "sky_insurance_abandoned_cart";
 const SESSION_KEY = "sky_insurance_session_id";
-// const ABANDON_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 const ABANDON_TIMEOUT = 10 * 1000; // 30 minutes
 
-const getSessionId = () => {
-  let sessionId = sessionStorage.getItem(SESSION_KEY);
-  if (!sessionId) {
-    sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
-    sessionStorage.setItem(SESSION_KEY, sessionId);
-  }
-  return sessionId;
+const generateSessionId = () => {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
 };
 
 export function useAbandonedCart() {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const lastActivityRef = useRef<number>(Date.now());
+  const sessionIdRef = useRef<string>(generateSessionId());
 
   const clearAbandonedCart = useCallback(() => {
     sessionStorage.removeItem(STORAGE_KEY);
@@ -48,7 +42,6 @@ export function useAbandonedCart() {
   }, []);
 
   const resetTimer = useCallback(() => {
-    lastActivityRef.current = Date.now();
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
@@ -80,12 +73,11 @@ export function useAbandonedCart() {
       userInfo: AbandonedCartData["userInfo"],
       carInfo: AbandonedCartData["carInfo"]
     ) => {
-      const sessionId = getSessionId();
       const existing = sessionStorage.getItem(STORAGE_KEY);
 
       if (existing) {
         const existingData: AbandonedCartData = JSON.parse(existing);
-        if (existingData.emailSent && existingData.sessionId === sessionId) {
+        if (existingData.emailSent) {
           return;
         }
       }
@@ -95,7 +87,7 @@ export function useAbandonedCart() {
         carInfo,
         timestamp: Date.now(),
         emailSent: false,
-        sessionId,
+        sessionId: sessionIdRef.current,
       };
 
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -110,15 +102,9 @@ export function useAbandonedCart() {
   }, []);
 
   useEffect(() => {
-    const handleActivity = () => {
-      lastActivityRef.current = Date.now();
-    };
-
     const handleVisibilityChange = () => {
       if (document.hidden) {
         resetTimer();
-      } else {
-        handleActivity();
       }
     };
 
@@ -135,25 +121,10 @@ export function useAbandonedCart() {
       }
     };
 
-    const events = [
-      "mousedown",
-      "mousemove",
-      "keypress",
-      "scroll",
-      "touchstart",
-      "click",
-    ];
-    events.forEach((event) => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("beforeunload", handleBeforeUnload);
 
     return () => {
-      events.forEach((event) => {
-        document.removeEventListener(event, handleActivity, true);
-      });
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
 

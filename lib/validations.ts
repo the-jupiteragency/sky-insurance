@@ -13,10 +13,11 @@ export const carInfoSchema = z.object({
 });
 
 export const userInfoSchema = z.object({
-  full_name: z.string().min(2, "Full name must be at least 2 characters"),
+  full_name: z.string().min(2, "Full name must be at least 2 characters").max(100),
   mobile_number: z
     .string()
-    .regex(/^01[0-9]{9}$/, "Invalid Egyptian mobile number"),
+    .regex(/^01[0-9]{9}$/, "Invalid Egyptian mobile number")
+    .transform(val => val.trim()),
   email: z.string().email("Invalid email address").optional().or(z.literal("")),
 });
 
